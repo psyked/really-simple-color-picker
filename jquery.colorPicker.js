@@ -3,8 +3,8 @@
  * 
  * Licensed under the MIT (MIT-LICENSE.txt) licenses.
  *
- * Copyright (c) 2008 Lakshan Perera (www.laktek.com)
- *                    Daniel Lacy (daniellacy.com)
+ * Copyright (c) 2008-2012 
+ * Lakshan Perera (www.laktek.com) & Daniel Lacy (daniellacy.com)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,11 +90,17 @@
 
             newHexField.bind("keydown", function (event) {
                 if (event.keyCode === 13) {
-                    $.fn.colorPicker.changeColor($.fn.colorPicker.toHex($(this).val()));
+                    var hexColor = $.fn.colorPicker.toHex($(this).val());
+                    $.fn.colorPicker.changeColor(hexColor ? hexColor : element.val());
                 }
                 if (event.keyCode === 27) {
-                    $.fn.colorPicker.hidePalette(paletteId);
+                    $.fn.colorPicker.hidePalette();
                 }
+            });
+
+            newHexField.bind("keyup", function (event) {
+              var hexColor = $.fn.colorPicker.toHex($(event.target).val());
+              $.fn.colorPicker.previewColor(hexColor ? hexColor : element.val());
             });
 
             $('<div class="colorPicker_hexWrap" />').append(newHexLabel).appendTo(newPalette);
@@ -179,7 +185,7 @@
             var selector = activePalette,
                 selectorParent = $(event.target).parents("#" + selector.attr('id')).length;
 
-            if (event.target === $(selector)[0] || event.target === selectorOwner || selectorParent > 0) {
+            if (event.target === $(selector)[0] || event.target === selectorOwner[0] || selectorParent > 0) {
                 return;
             }
 
@@ -189,7 +195,7 @@
         /**
          * Hide the color palette modal.
         **/
-        hidePalette : function (paletteId) {
+        hidePalette : function () {
             $(document).unbind("mousedown", $.fn.colorPicker.checkMouse);
 
             $('.colorPicker-palette').hide();
@@ -238,10 +244,17 @@
         **/
         changeColor : function (value) {
             selectorOwner.css("background-color", value);
-
             selectorOwner.prev("input").val(value).change();
 
             $.fn.colorPicker.hidePalette();
+        },
+
+
+        /**
+         * Preview the input with a newly selected color.
+        **/
+        previewColor : function (value) {
+            selectorOwner.css("background-color", value);
         },
 
         /**
@@ -262,6 +275,8 @@
                     $(this).css("border-color", "#598FEF");
 
                     paletteInput.val(color);
+
+                    $.fn.colorPicker.previewColor(color);
                 },
                 mouseout : function (ev) {
                     $(this).css("border-color", "#000");
@@ -269,6 +284,8 @@
                     paletteInput.val(selectorOwner.css("background-color"));
 
                     paletteInput.val(lastColor);
+
+                    $.fn.colorPicker.previewColor(lastColor);
                 }
             });
         }
