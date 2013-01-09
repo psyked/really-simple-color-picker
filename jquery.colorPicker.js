@@ -6,6 +6,9 @@
  * Copyright (c) 2008-2012
  * Lakshan Perera (www.laktek.com) & Daniel Lacy (daniellacy.com)
  *
+ * Modified by James Ford to include auto-repositioning of the palette panel
+ * when overflowing the page edges.
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
@@ -28,7 +31,6 @@
 (function ($)
 {
     "use strict";
-
     /**
      * Create a couple private variables.
      **/
@@ -126,10 +128,8 @@
 
             newControl.bind("click", function ()
             {
-                if (element.is(':not(:disabled)'))
-                {
-                    $.fn.colorPicker.togglePalette($('#' + paletteId), $(this));
-                }
+                $(this).toggleClass("active");
+                $.fn.colorPicker.togglePalette($('#' + paletteId), $(this));
             });
 
             if (options && options.onColorChange)
@@ -229,7 +229,7 @@
         hidePalette :function ()
         {
             $(document).unbind("mousedown", $.fn.colorPicker.checkMouse);
-
+            $('.colorPicker-picker').removeClass("active");
             $('.colorPicker-palette').hide();
         },
 
@@ -240,9 +240,25 @@
         {
             var hexColor = selectorOwner.prev("input").val();
 
+            var offset = selectorOwner.offset();
+            var pHeight = palette.height();
+            var pWidth = palette.width();
+            var targetTop = offset.top + (selectorOwner.outerHeight()) + 4;
+            var targetLeft = offset.left - 4;
+
+            if ((targetTop + pHeight) > $(window).height())
+            {
+                targetTop = offset.top - pHeight - 10;
+            }
+
+            if ((targetLeft + pWidth) > $(window).width())
+            {
+                targetLeft = offset.left + (selectorOwner.outerWidth()) - pWidth;
+            }
+
             palette.css({
-                top  :selectorOwner.offset().top + (selectorOwner.outerHeight()),
-                left :selectorOwner.offset().left
+                top  :targetTop,
+                left :targetLeft
             });
 
             $("#color_value").val(hexColor);
@@ -250,6 +266,8 @@
             palette.show();
 
             $(document).bind("mousedown", $.fn.colorPicker.checkMouse);
+
+            $(palette).find('.colorPicker-picker').addClass("active");
         },
 
         /**
